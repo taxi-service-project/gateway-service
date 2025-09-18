@@ -1,0 +1,48 @@
+server:
+  port: 8080
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+spring:
+  application:
+    name: gateway-service
+  cloud:
+    gateway:
+      routes:
+        - id: driver-service
+          uri: lb://driver-service
+          predicates:
+            - Path=/driver/**
+        - id: geospatial-service
+          uri: lb://geospatial-service
+          predicates:
+            - Path=/geospatial/**
+        - id: matching-service
+          uri: lb://matching-service
+          predicates:
+            - Path=/matching/**
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=/notification/**
+        - id: payment-service
+          uri: lb://payment-service
+          predicates:
+            - Path=/payment/**
+        - id: pricing-service
+          uri: lb://pricing-service
+          predicates:
+            - Path=/pricing/**
+        - id: trip-service
+          uri: lb://trip-service
+          predicates:
+            - Path=/trip/**
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/user/**
