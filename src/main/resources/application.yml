@@ -11,38 +11,89 @@ eureka:
 spring:
   application:
     name: gateway-service
+  jwt:
+    secret: test-v3ryLo0ngAndS3cretKeyForJwtTokenGenerationMustBeAtLeast256Bits
+
   cloud:
     gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:3000"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - PATCH
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+
       routes:
-        - id: driver-service
-          uri: lb://driver-service
+        - id: user-service-login
+          uri: lb://user-service
           predicates:
-            - Path=/driver/**
-        - id: geospatial-service
-          uri: lb://geospatial-service
+            - Path=/login, /reissue
+
+        - id: user-service-register
+          uri: lb://user-service
           predicates:
-            - Path=/geospatial/**
-        - id: matching-service
-          uri: lb://matching-service
+            - Path=/api/users
+            - Method=POST
+
+        - id: user-service-protected
+          uri: lb://user-service
           predicates:
-            - Path=/matching/**
-        - id: notification-service
-          uri: lb://notification-service
-          predicates:
-            - Path=/notification/**
-        - id: payment-service
-          uri: lb://payment-service
-          predicates:
-            - Path=/payment/**
-        - id: pricing-service
-          uri: lb://pricing-service
-          predicates:
-            - Path=/pricing/**
+            - Path=/api/users/**
+          filters:
+            - AuthorizationHeaderFilter
+
         - id: trip-service
           uri: lb://trip-service
           predicates:
-            - Path=/trip/**
-        - id: user-service
-          uri: lb://user-service
+            - Path=/api/trips/**
+          filters:
+            - AuthorizationHeaderFilter
+
+        - id: driver-service
+          uri: lb://driver-service
           predicates:
-            - Path=/user/**
+            - Path=/api/drivers/**
+          filters:
+            - AuthorizationHeaderFilter
+
+        - id: payment-service
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/payments/**
+          filters:
+            - AuthorizationHeaderFilter
+
+        - id: matching-service
+          uri: lb://matching-service
+          predicates:
+            - Path=/api/matches/**
+          filters:
+            - AuthorizationHeaderFilter
+
+        - id: geospatial-service
+          uri: lb://geospatial-service
+          predicates:
+            - Path=/api/locations/**
+          filters:
+            - AuthorizationHeaderFilter
+
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=/api/notifications/**
+          filters:
+            - AuthorizationHeaderFilter
+
+        - id: pricing-service
+          uri: lb://pricing-service
+          predicates:
+            - Path=/api/prices/**
+          filters:
+            - AuthorizationHeaderFilter
