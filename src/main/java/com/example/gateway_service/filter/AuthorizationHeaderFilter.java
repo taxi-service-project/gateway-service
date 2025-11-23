@@ -50,7 +50,7 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory<Auth
             try {
                 Claims claims = jwtUtil.parseClaims(token);
 
-                String userId = claims.get("username", String.class);
+                String userId = claims.get("userId", String.class);
                 String role = claims.get("role", String.class);
 
                 // 3. 헤더 변조
