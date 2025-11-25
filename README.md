@@ -1,28 +1,32 @@
-# MSA 기반 Taxi 호출 플랫폼 - API Gateway Service
+# 🚪 Gateway Service (API Gateway)
 
-Taxi 호출 플랫폼의 **API Gateway** 역할을 수행하는 마이크로서비스입니다. 외부 클라이언트(앱, 웹)로부터 들어오는 모든 요청을 받아 적절한 내부 마이크로서비스로 라우팅하고, 로드 밸런싱을 수행합니다.
+> **시스템의 단일 진입점으로서 보안(Auth), 라우팅(Routing), 부하 분산(Load Balancing)을 담당하는 마이크로서비스입니다.**
 
-## 주요 기능
+## 🛠 Tech Stack
+| Category | Technology                              |
+| :--- |:----------------------------------------|
+| **Framework** | Spring Cloud Gateway  |
+| **Security** | JWT , Spring Security                   |
+| **Discovery** | Netflix Eureka Client                   |
 
-* **라우팅 (Routing):** Path Predicate(`Path=/driver/**`, `/user/**` 등)를 기반으로 요청을 해당 마이크로서비스로 전달합니다.
-* **로드 밸런싱 (Load Balancing):** Eureka Server로부터 서비스 인스턴스 목록을 받아 `lb://` 프로토콜을 사용하여 클라이언트 사이드 로드 밸런싱을 수행합니다.
-* **서비스 디스커버리 (Service Discovery):** Eureka Client로서 Discovery Service(Eureka Server)에 등록됩니다.
+## 📡 API Specification (Routing & Security)
 
-## 라우팅 규칙 (Routing Rules)
+| Service | Path Pattern | Auth Required | Description |
+| :--- | :--- | :---: | :--- |
+| **User** | `POST /login`, `/reissue` | ❌ | 로그인 및 인증 토큰 관련 (Public) |
+| **User** | `POST /api/users` | ❌ | 회원가입 관련 (Public) |
+| **User** | `/api/users/**` | 🔐 | 회원 정보 조회 및 수정 관련 |
+| **Trip** | `/api/trips/**` | 🔐 | 여정 및 배차 관리 관련 |
+| **Driver** | `/api/drivers/**` | 🔐 | 기사 정보 및 상태 관리 관련 |
+| **Matching** | `/api/matches/**` | 🔐 | 실시간 기사 매칭 관련 |
+| **Geo** | `/api/locations/**` | 🔐 | 실시간 위치 및 관제 관련 |
+| **Payment** | `/api/payments/**` | 🔐 | 결제 승인 및 내역 관련 |
+| **Pricing** | `/api/prices/**` | 🔐 | 요금 계산 및 정책 관련 |
+| **Notification**| `/api/notifications/**`| 🔐 | 알림 발송 및 설정 관련 |
+| **Recommend** | `/api/recommendations/**`| 🔐 | AI 수요 예측 및 추천 관련 |
 
-| Path Prefix          | Target Service         |
-| :------------------- | :--------------------- |
-| `/driver/**`         | `driver-service`       |
-| `/geospatial/**`     | `geospatial-service`   |
-| `/matching/**`       | `matching-service`     |
-| `/notification/**`   | `notification-service` |
-| `/payment/**`        | `payment-service`      |
-| `/pricing/**`        | `pricing-service`      |
-| `/trip/**`           | `trip-service`         |
-| `/user/**`           | `user-service`         |
+## 🚀 Key Improvements (핵심 기술적 개선)
 
-## 기술 스택 (Technology Stack)
-
-* **Language & Framework:** Java, Spring Boot
-* **API Gateway:** Spring Cloud Gateway
-* **Service Discovery:** Spring Cloud Netflix Eureka Client
+### 1. Auth Offloading (인증 책임 분리)
+* **문제:** 개별 마이크로서비스마다 JWT 검증 로직을 중복 구현하여 관리 포인트가 분산되는 문제 발생.
+* **해결:** `AuthorizationHeaderFilter`를 구현하여 게이트웨이 진입점에서 **JWT 유효성을 일괄 검증**합니다. 검증에 성공하면 사용자 정보를 **HTTP Header(`X-User-Id`)**에 주입하여 뒷단 서비스로 전파하는 **Trust Boundary** 모델을 구축했습니다.
