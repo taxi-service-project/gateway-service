@@ -56,6 +56,12 @@ spring:
           filters:
             - AuthorizationHeaderFilter
 
+        - id: driver-service-register
+          uri: lb://driver-service
+          predicates:
+              - Path=/api/drivers
+              - Method=POST
+
         - id: driver-service
           uri: lb://driver-service
           predicates:
