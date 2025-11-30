@@ -30,3 +30,11 @@
 ### 1. Auth Offloading (인증 책임 분리)
 * **문제:** 개별 마이크로서비스마다 JWT 검증 로직을 중복 구현하여 관리 포인트가 분산되는 문제 발생.
 * **해결:** `AuthorizationHeaderFilter`를 구현하여 게이트웨이 진입점에서 **JWT 유효성을 일괄 검증**합니다. 검증에 성공하면 사용자 정보를 **HTTP Header(`X-User-Id`)**에 주입하여 뒷단 서비스로 전파하는 **Trust Boundary** 모델을 구축했습니다.
+
+
+
+
+----------
+
+## 아키텍쳐
+<img width="2324" height="1686" alt="Image" src="https://github.com/user-attachments/assets/81a25ff9-ee02-4996-80d3-f9217c3b7750" />
