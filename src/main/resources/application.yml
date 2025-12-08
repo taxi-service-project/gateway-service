@@ -103,3 +103,10 @@ spring:
             - Path=/api/prices/**
           filters:
             - AuthorizationHeaderFilter
+
+        - id: trip-service-websocket
+          uri: lb:ws://trip-service
+          predicates:
+            - Path=/ws/trips/tracking/**
+          filters:
+            - WebSocketJwtFilter
