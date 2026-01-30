@@ -39,14 +39,13 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory<Auth
                 return onError(exchange, "No authorization header", HttpStatus.UNAUTHORIZED);
             }
 
-            String authorizationHeader = request.getHeaders().get(HttpHeaders.AUTHORIZATION).get(0);
-            if (!authorizationHeader.startsWith("Bearer ")) {
+            String authorizationHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);            if (!authorizationHeader.startsWith("Bearer ")) {
                 return onError(exchange, "Invalid authorization header format", HttpStatus.UNAUTHORIZED);
             }
 
             String token = authorizationHeader.replace("Bearer ", "");
 
-            // 2. 토큰 검증 및 파싱 (여기서 최적화!)
+            // 2. 토큰 검증 및 파싱
             try {
                 Claims claims = jwtUtil.parseClaims(token);
 
