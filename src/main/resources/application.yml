@@ -1,5 +1,6 @@
 server:
   port: 8080
+  shutdown: graceful
 
 eureka:
   client:
@@ -13,6 +14,8 @@ spring:
     name: gateway-service
   jwt:
     secret: test-v3ryLo0ngAndS3cretKeyForJwtTokenGenerationMustBeAtLeast256Bits
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
 
 management:
   tracing:
