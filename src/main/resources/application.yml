@@ -118,3 +118,10 @@ management:
             - Path=/ws/trips/tracking/**
           filters:
             - WebSocketJwtFilter
+
+        - id: geospatial-service-websocket
+          uri: lb:ws://geospatial-service
+          predicates:
+            - Path=/ws/location/**
+          filters:
+            - WebSocketJwtFilter
