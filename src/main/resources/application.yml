@@ -67,6 +67,15 @@ management:
           filters:
             - AuthorizationHeaderFilter
 
+        - id: trip-service-admin
+          uri: lb://trip-service
+          predicates:
+            - Path=/api/trips/admin/failed-events/**
+            - Method=POST
+          filters:
+            - AdminOnlyFilter
+
+
         - id: driver-service-register
           uri: lb://driver-service
           predicates:
@@ -86,6 +95,14 @@ management:
             - Path=/api/payments/**
           filters:
             - AuthorizationHeaderFilter
+
+        - id: payment-service-admin
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/payments/admin/failed-events/**
+            - Method=POST
+          filters:
+            - AdminOnlyFilter
 
         - id: matching-service
           uri: lb://matching-service
