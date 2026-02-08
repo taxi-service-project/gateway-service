@@ -16,32 +16,6 @@ spring:
     secret: test-v3ryLo0ngAndS3cretKeyForJwtTokenGenerationMustBeAtLeast256Bits
   lifecycle:
     timeout-per-shutdown-phase: 30s
-
-management:
-  endpoint:
-    health:
-      probes:
-        enabled: true
-      show-details: always
-
-  endpoints:
-    web:
-      exposure:
-        include: "health, prometheus"
-
-  health:
-    livenessstate:
-      enabled: true
-    readinessstate:
-      enabled: true
-
-  tracing:
-    sampling:
-      probability: 1.0
-    zipkin:
-      tracing:
-        endpoint: "${ZIPKIN_ENDPOINT:http://localhost:9411/api/v2/spans}"
-
   cloud:
     gateway:
       globalcors:
@@ -77,13 +51,6 @@ management:
           filters:
             - AuthorizationHeaderFilter
 
-        - id: trip-service
-          uri: lb://trip-service
-          predicates:
-            - Path=/api/trips/**
-          filters:
-            - AuthorizationHeaderFilter
-
         - id: trip-service-admin
           uri: lb://trip-service
           predicates:
@@ -92,6 +59,12 @@ management:
           filters:
             - AdminOnlyFilter
 
+        - id: trip-service
+          uri: lb://trip-service
+          predicates:
+            - Path=/api/trips/**
+          filters:
+            - AuthorizationHeaderFilter
 
         - id: driver-service-register
           uri: lb://driver-service
@@ -106,13 +79,6 @@ management:
           filters:
             - AuthorizationHeaderFilter
 
-        - id: payment-service
-          uri: lb://payment-service
-          predicates:
-            - Path=/api/payments/**
-          filters:
-            - AuthorizationHeaderFilter
-
         - id: payment-service-admin
           uri: lb://payment-service
           predicates:
@@ -120,6 +86,13 @@ management:
             - Method=POST
           filters:
             - AdminOnlyFilter
+
+        - id: payment-service
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/payments/**
+          filters:
+            - AuthorizationHeaderFilter
 
         - id: matching-service
           uri: lb://matching-service
@@ -162,3 +135,28 @@ management:
             - Path=/ws/location/**
           filters:
             - WebSocketJwtFilter
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always
+
+  endpoints:
+    web:
+      exposure:
+        include: "health, prometheus"
+
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+
+  tracing:
+    sampling:
+      probability: 1.0
+    zipkin:
+      tracing:
+        endpoint: "${ZIPKIN_ENDPOINT:http://localhost:9411/api/v2/spans}"
