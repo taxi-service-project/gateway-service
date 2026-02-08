@@ -32,7 +32,7 @@ public class WebSocketJwtFilter extends AbstractGatewayFilterFactory<WebSocketJw
             ServerHttpRequest request = exchange.getRequest();
 
             // 1. 쿼리 파라미터에서 토큰 추출
-            String token = request.getQueryParams().getFirst("token");
+            String token = request.getQueryParams().getFirst("Authorization");
 
             if (token == null || token.isEmpty()) {
                 return onError(exchange, "No token in query param", HttpStatus.UNAUTHORIZED);
