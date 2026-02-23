@@ -1,37 +1,41 @@
 # 🚪 Gateway Service (API Gateway)
 
-> **시스템의 단일 진입점으로서 보안(Auth), 라우팅(Routing), 부하 분산(Load Balancing)을 담당하는 마이크로서비스입니다.**
+> **전체 MSA 시스템의 단일 진입점(Single Point of Entry)으로서, 중앙 집중형 라우팅, 로드 밸런싱, 그리고 모든 서비스의 공통 인증/인가(Auth)를 책임집니다.**
 
 ## 🛠 Tech Stack
-| Category | Technology                              |
-| :--- |:----------------------------------------|
-| **Framework** | Spring Cloud Gateway  |
-| **Security** | JWT , Spring Security                   |
-| **Discovery** | Netflix Eureka Client                   |
+| Category | Technology                               |
+| :--- |:-----------------------------------------|
+| **Language** | **Java 17** |
+| **Framework** | Spring Cloud Gateway (WebFlux)           |
+| **Security** | Spring Security (JWT)                     |
+| **Discovery** | Netflix Eureka Client                    |
 
 ## 📡 API Specification (Routing & Security)
+*`application.yml`에 정의된 15개의 라우팅 규칙 및 보안 필터 적용 현황입니다.*
 
-| Service | Path Pattern | Auth Required | Description |
-| :--- | :--- | :---: | :--- |
-| **User** | `POST /login`, `/reissue` | ❌ | 로그인 및 인증 토큰 관련 (Public) |
-| **User** | `POST /api/users` | ❌ | 회원가입 관련 (Public) |
-| **User** | `/api/users/**` | 🔐 | 회원 정보 조회 및 수정 관련 |
-| **Trip** | `/api/trips/**` | 🔐 | 여정 및 배차 관리 관련 |
-| **Driver** | `/api/drivers/**` | 🔐 | 기사 정보 및 상태 관리 관련 |
-| **Matching** | `/api/matches/**` | 🔐 | 실시간 기사 매칭 관련 |
-| **Geo** | `/api/locations/**` | 🔐 | 실시간 위치 및 관제 관련 |
-| **Payment** | `/api/payments/**` | 🔐 | 결제 승인 및 내역 관련 |
-| **Pricing** | `/api/prices/**` | 🔐 | 요금 계산 및 정책 관련 |
-| **Notification**| `/api/notifications/**`| 🔐 | 알림 발송 및 설정 관련 |
-| **Recommend** | `/api/recommendations/**`| 🔐 | AI 수요 예측 및 추천 관련 |
+| Target Service | 라우팅 URI | Path & Method (Predicates) | 적용된 필터 (Filters) | 비고 |
+| :--- | :--- | :--- | :--- | :--- |
+| **User Service** | `lb://user-service` | `Path=/login, /reissue` | ❌ (Public) | 로그인, 토큰 재발급 |
+| **User Service** | `lb://user-service` | `Path=/api/users`, `Method=POST` | ❌ (Public) | 일반 사용자 회원가입 |
+| **User Service** | `lb://user-service` | `Path=/api/users/**` | `AuthorizationHeaderFilter` | 사용자 정보 관리 |
+| **Trip Service** | `lb://trip-service` | `Path=/api/trips/admin/failed-events/**`, `Method=POST` | **`AdminOnlyFilter`** | **[어드민]** 여정 DLT 복구 |
+| **Trip Service** | `lb://trip-service` | `Path=/api/trips/**` | `AuthorizationHeaderFilter` | 여정 관리 API |
+| **Driver Service** | `lb://driver-service` | `Path=/api/drivers`, `Method=POST` | ❌ (Public) | 기사 회원가입 |
+| **Driver Service** | `lb://driver-service` | `Path=/api/drivers/**` | `AuthorizationHeaderFilter` | 기사 정보 및 상태 관리 |
+| **Payment Service** | `lb://payment-service` | `Path=/api/payments/admin/failed-events/**`, `Method=POST` | **`AdminOnlyFilter`** | **[어드민]** 결제 DLT 복구 |
+| **Payment Service** | `lb://payment-service` | `Path=/api/payments/**` | `AuthorizationHeaderFilter` | 결제 조회 API |
+| **Matching Service**| `lb://matching-service` | `Path=/api/matches/**` | `AuthorizationHeaderFilter` | 배차 매칭 API |
+| **Geo Service** | `lb://geospatial-service`| `Path=/api/locations/**` | `AuthorizationHeaderFilter` | 위치 정보 관련 API |
+| **Notification** | `lb://notification-service`| `Path=/api/notifications/**` | `AuthorizationHeaderFilter` | 알림 관련 API |
+| **Pricing Service** | `lb://pricing-service` | `Path=/api/prices/**` | `AuthorizationHeaderFilter` | 요금 계산 관련 API |
+| **Trip Service (WS)**| `lb:ws://trip-service` | `Path=/ws/trips/tracking/**` | **`WebSocketJwtFilter`** | **[WS]** 승객용 실시간 추적 |
+| **Geo Service (WS)** | `lb:ws://geospatial-service`| `Path=/ws/location/**` | **`WebSocketJwtFilter`** | **[WS]** 기사 위치 수집 |
 
 ## 🚀 Key Improvements (핵심 기술적 개선)
 
-### 1. Auth Offloading (인증 책임 분리)
-* **문제:** 개별 마이크로서비스마다 JWT 검증 로직을 중복 구현하여 관리 포인트가 분산되는 문제 발생.
-* **해결:** `AuthorizationHeaderFilter`를 구현하여 게이트웨이 진입점에서 **JWT 유효성을 일괄 검증**합니다. 검증에 성공하면 사용자 정보를 **HTTP Header(`X-User-Id`)**에 주입하여 뒷단 서비스로 전파하는 **Trust Boundary** 모델을 구축했습니다.
-
-
+### 1. Auth Offloading & Trust Boundary (인증 책임 중앙화)
+* **문제점:** 개별 마이크로서비스마다 JWT 파싱 및 만료 검증 로직을 구현하면 결합도가 높아지고 보안 홀이 발생할 위험이 있었습니다.
+* **개선안:** `AuthorizationHeaderFilter`를 통해 게이트웨이 진입점에서 JWT 유효성을 단 1회만 일괄 검증합니다. 검증 완료 후 토큰의 Payload를 추출하여 `X-User-Id`, `X-Role` 형태의 HTTP Header로 변환해 뒷단으로 넘겨주는 패턴을 적용했습니다.
 
 
 ----------
